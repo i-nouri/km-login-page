@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KM Service Login</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 400px; margin: 40px auto; }
+    label, input { display: block; width: 100%; margin-bottom: 10px; }
+    button { padding: 10px; width: 100%; }
+    #response { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>Login to KM Service</h2>
+  <form id="loginForm">
+    <label>Email:</label>
+    <input type="email" id="email" required placeholder="you@example.com" />
+    
+    <label>Password:</label>
+    <input type="password" id="password" required placeholder="Your password" />
+    
+    <button type="submit">Login</button>
+  </form>
+
+  <div id="response"></div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const responseDiv = document.getElementById('response');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      responseDiv.innerHTML = 'Checking...';
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch('https://imno.app.n8n.cloud/webhook-test/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        if (res.status === 200) {
+          const contentType = res.headers.get('content-type');
+          if (contentType && contentType.includes('text/html')) {
+            const html = await res.text();
+            document.documentElement.innerHTML = html;
+          } else {
+            const data = await res.json();
+            responseDiv.innerText = data.message || 'Access granted.';
+          }
+        } else {
+          const errorData = await res.json();
+          responseDiv.innerText = errorData.message || 'Access denied.';
+        }
+      } catch (error) {
+        responseDiv.innerText = 'Error connecting to service.';
+        console.error(error);
+      }
+    });
+  </script>
+</body>
+</html>
